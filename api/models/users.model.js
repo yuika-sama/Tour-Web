@@ -10,7 +10,7 @@ const User = {
         type: String,
         allowNull: false
     },
-    email: {
+    email: {    
         type: String,
         allowNull: false,
         unique: true
@@ -45,27 +45,23 @@ const User = {
 
 module.exports = {
    createUser: async (userData) => {    
-    const [result] = await pool.query('INSERT INTO users SET ?', [userData]);
+    const [result] = await pool.query('INSERT INTO users SET ?', userData);
     return result.insertId;
    },
     getUserById: async (id) => {
-    const [result] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
+    const [result] = await pool.query('SELECT * FROM users WHERE user_id = ?', [id]);
     return result[0];
    },
    updateUser: async (id, userData) => {
-    const [result] = await pool.query('UPDATE users SET ? WHERE id = ?', [userData, id]);
+    const [result] = await pool.query('UPDATE users SET ? WHERE user_id = ?', [userData, id]);
     return result.affectedRows;
    },
    deleteUser: async (id) => {
-    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    const [result] = await pool.query('DELETE FROM users WHERE user_id = ?', [id]);
     return result.affectedRows;
    },
    getAllUsers: async () => {
     const [result] = await pool.query('SELECT * FROM users');
-    return result;
-   },
-   searchUserByName: async (name) => {
-    const [result] = await pool.query('SELECT * FROM users WHERE name LIKE ?', [name]);
     return result;
    },
    searchUserByEmail: async (email) => {
@@ -75,5 +71,5 @@ module.exports = {
    searchUserByProviderId: async (providerId) => {
     const [result] = await pool.query('SELECT * FROM users WHERE provider_id LIKE ?', [providerId]);
     return result;
-   }    
+   },
 }
