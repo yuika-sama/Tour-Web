@@ -30,43 +30,58 @@ const Review = {
 
 module.exports = {
     createReview: async (reviewData) => {
-        const [result] = await pool.query('INSERT INTO reviews SET ?', [reviewData]);
-        return result.insertId;
-    },  
+        const { user_id, tour_id, rating, comment, review_date } = reviewData;
+        reviewData.created_at = new Date();
+        reviewData.updated_at = new Date();
+        const query = `INSERT INTO reviews (user_id, tour_id, rating, comment, review_date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+        const result = await pool.query(query, [user_id, tour_id, rating, comment, review_date, reviewData.created_at, reviewData.updated_at]);
+        return result.rows[0];
+    },
     getReviewById: async (reviewId) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE review_id = ?', [reviewId]);
-        return result[0];
+        const query = `SELECT * FROM reviews WHERE review_id = $1`;
+        const result = await pool.query(query, [reviewId]);
+        return result.rows[0];
     },
     updateReview: async (reviewId, reviewData) => {
-        const [result] = await pool.query('UPDATE reviews SET ? WHERE review_id = ?', [reviewData, reviewId]);
-        return result.affectedRows;
+        const { user_id, tour_id, rating, comment, review_date } = reviewData;
+        reviewData.updated_at = new Date();
+        const query = `UPDATE reviews SET user_id = $1, tour_id = $2, rating = $3, comment = $4, review_date = $5, updated_at = $6 WHERE review_id = $7`;
+        const result = await pool.query(query, [user_id, tour_id, rating, comment, review_date, reviewData.updated_at, reviewId]);
+        return result.rows[0];
     },
     deleteReview: async (reviewId) => {
-        const [result] = await pool.query('DELETE FROM reviews WHERE review_id = ?', [reviewId]);
-        return result.affectedRows;
+        const query = `DELETE FROM reviews WHERE review_id = $1`;
+        const result = await pool.query(query, [reviewId]);
+        return result.rows[0];
     },
     getAllReviews: async () => {
-        const [result] = await pool.query('SELECT * FROM reviews');
-        return result;
-    },
-    getReviewsByUserId: async (userId) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE user_id = ?', [userId]);
-        return result;
+        const query = `SELECT * FROM reviews`;  
+        const result = await pool.query(query);
+        return result.rows;
     },
     getReviewsByTourId: async (tourId) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE tour_id = ?', [tourId]);
-        return result;
+        const query = `SELECT * FROM reviews WHERE tour_id = $1`;
+        const result = await pool.query(query, [tourId]);
+        return result.rows;
     },
-    getReviewsByRating: async (rating) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE rating = ?', [rating]);
-        return result;
+    getReviewsByUserId: async (userId) => {
+        const query = `SELECT * FROM reviews WHERE user_id = $1`;
+        const result = await pool.query(query, [userId]);
+        return result.rows;
     },
-    getReviewsByComment: async (comment) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE comment = ?', [comment]);
-        return result;
+    getAverageRatingByTourId: async (tourId) => {
+        const query = `SELECT AVG(rating) FROM reviews WHERE tour_id = $1`;
+        const result = await pool.query(query, [tourId]);
+        return result.rows[0].avg;
     },
-    getReviewsByReviewDate: async (reviewDate) => {
-        const [result] = await pool.query('SELECT * FROM reviews WHERE review_date = ?', [reviewDate]);
-        return result;
-    }
+    countRatingByTourId: async (tourId) => {
+        const query = `SELECT COUNT(rating) FROM reviews WHERE tour_id = $1`;
+        const result = await pool.query(query, [tourId]);
+        return result.rows[0].count;
+    },   
+    getBestRating: async () => {
+        const query = `SELECT * FROM reviews ORDER BY rating DESC LIMIT 10`;
+        const result = await pool.query(query);
+        return result.rows[0];
+    },       
 };

@@ -1,58 +1,58 @@
 const Payment = require('../models/payments.model');
 
 const createPayment = async (req, res) => {
-    const paymentData = req.body;
-    const paymentId = await Payment.createPayment(paymentData);
-    res.status(201).json({ message: 'Payment created successfully', paymentId });
-}
+    const payment = req.body;
+    const newPayment = await Payment.createPayment(payment);
+    res.status(201).json(newPayment);
+};  
 
 const getPaymentById = async (req, res) => {
-    const paymentId = req.params.paymentId;
+    const paymentId = req.params.id;
     const payment = await Payment.getPaymentById(paymentId);
     res.status(200).json(payment);
-}
+};
 
 const updatePayment = async (req, res) => {
-    const paymentId = req.params.paymentId;
-    const paymentData = req.body;
-    const updatedPayment = await Payment.updatePayment(paymentId, paymentData);
+    const paymentId = req.params.id;
+    const payment = req.body;
+    const updatedPayment = await Payment.updatePayment(paymentId, payment);
     res.status(200).json(updatedPayment);
-}   
+};  
 
 const deletePayment = async (req, res) => {
-    const paymentId = req.params.paymentId;
+    const paymentId = req.params.id;
     const deletedPayment = await Payment.deletePayment(paymentId);
     res.status(200).json(deletedPayment);
-}   
+};  
 
 const getAllPayments = async (req, res) => {
     const payments = await Payment.getAllPayments();
     res.status(200).json(payments);
-}   
+};  
 
-const findByBookingId = async (req, res) => {
-    const bookingId = req.params.bookingId;
-    const payment = await Payment.findByBookingId(bookingId);
-    res.status(200).json(payment);
-}   
+const getPaymentsByBookingId = async (req, res) => {
+    const bookingId = req.params.id;
+    const payments = await Payment.getPaymentsByBookingId(bookingId);
+    res.status(200).json(payments);
+};  
 
-const findByPaymentMethod = async (req, res) => {
+const getPaymentsByPaymentMethod = async (req, res) => {
     const paymentMethod = req.params.paymentMethod;
-    const payment = await Payment.findByPaymentMethod(paymentMethod);
-    res.status(200).json(payment);
-}   
+    const payments = await Payment.getPaymentsByPaymentMethod(paymentMethod);
+    res.status(200).json(payments);
+};  
 
-const findByTransactionId = async (req, res) => {
+const getPaymentsByTransactionId = async (req, res) => {
     const transactionId = req.params.transactionId;
-    const payment = await Payment.findByTransactionId(transactionId);
-    res.status(200).json(payment);
-}   
+    const payments = await Payment.getPaymentsByTransactionId(transactionId);
+    res.status(200).json(payments);
+};  
 
-const findByStatus = async (req, res) => {
+const getPaymentsByStatus = async (req, res) => {
     const status = req.params.status;
-    const payment = await Payment.findByStatus(status);
-    res.status(200).json(payment);
-}   
+    const payments = await Payment.getPaymentsByStatus(status);
+    res.status(200).json(payments);
+}; 
 
 module.exports = {
     createPayment,
@@ -60,8 +60,8 @@ module.exports = {
     updatePayment,
     deletePayment,
     getAllPayments,
-    findByBookingId,
-    findByPaymentMethod,
-    findByTransactionId,
-    findByStatus
+    getPaymentsByBookingId, 
+    getPaymentsByPaymentMethod,
+    getPaymentsByTransactionId,
+    getPaymentsByStatus
 };  

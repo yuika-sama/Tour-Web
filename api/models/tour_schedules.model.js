@@ -21,24 +21,29 @@ const TourSchedule = {
 };
 
 module.exports = {
-    createTourSchedule: async (tourScheduleData) => {
-        const [result] = await pool.query('INSERT INTO tour_schedules (tour_id, day_number, activity) VALUES (?, ?, ?)', [tourScheduleData.tour_id, tourScheduleData.day_number, tourScheduleData.activity]);
-        return result.insertId;
-    },
-    getTourScheduleById: async (schedule_id) => {
-        const [result] = await pool.query('SELECT * FROM tour_schedules WHERE schedule_id = ?', [schedule_id]);
-        return result[0];
-    },
-    updateTourSchedule: async (schedule_id, tourScheduleData) => {
-        const [result] = await pool.query('UPDATE tour_schedules SET tour_id = ?, day_number = ?, activity = ? WHERE schedule_id = ?', [tourScheduleData.tour_id, tourScheduleData.day_number, tourScheduleData.activity, schedule_id]);
-        return result.affectedRows;
-    },
-    deleteTourSchedule: async (schedule_id) => {
-        const [result] = await pool.query('DELETE FROM tour_schedules WHERE schedule_id = ?', [schedule_id]);
-        return result.affectedRows;
-    },
-    getAllTourSchedules: async () => {
-        const [result] = await pool.query('SELECT * FROM tour_schedules');
-        return result;
-    }
+   createTourSchedule: async (tourSchedule) => {
+    const query = `INSERT INTO tour_schedules (tour_id, day_number, activity) VALUES ($1, $2, $3)`;
+    const result = await pool.query(query, [tourSchedule.tour_id, tourSchedule.day_number, tourSchedule.activity]);
+    return result.rows[0];
+   }, 
+   getTourScheduleById: async (schedule_id) => {    
+    const query = `SELECT * FROM tour_schedules WHERE schedule_id = $1`;
+    const result = await pool.query(query, [schedule_id]);
+    return result.rows[0];
+   },
+   updateTourSchedule: async (schedule_id, tourSchedule) => {   
+    const query = `UPDATE tour_schedules SET tour_id = $1, day_number = $2, activity = $3 WHERE schedule_id = $4`;
+    const result = await pool.query(query, [tourSchedule.tour_id, tourSchedule.day_number, tourSchedule.activity, schedule_id]);
+    return result.rows[0];
+   },
+   deleteTourSchedule: async (schedule_id) => {
+    const query = `DELETE FROM tour_schedules WHERE schedule_id = $1`;
+    const result = await pool.query(query, [schedule_id]);
+    return result.rows[0];
+   },
+   getAllTourSchedules: async () => {
+    const query = `SELECT * FROM tour_schedules`;
+    const result = await pool.query(query);
+    return result.rows;
+   }    
 };

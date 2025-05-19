@@ -1,74 +1,77 @@
-const { createReview, getReviewById, updateReview, deleteReview, getAllReviews, getReviewsByUserId, getReviewsByTourId, getReviewsByRating, getReviewsByComment, getReviewsByReviewDate } = require('../models/reviews.model');
+const Review = require('../models/reviews.model');
 
-const createReviewController = async (req, res) => {
-    const reviewData = req.body;
-    const reviewId = await createReview(reviewData);
-    res.status(201).json({ message: 'Review created successfully', reviewId });
-};
-
-const getReviewByIdController = async (req, res) => {
-    const reviewId = req.params.reviewId;
-    const review = await getReviewById(reviewId);
-    res.status(200).json(review);
-};
-
-const updateReviewController = async (req, res) => {
-    const reviewId = req.params.reviewId;
-    const reviewData = req.body;
-    const review = await updateReview(reviewId, reviewData);
-    res.status(200).json(review);
+const createReview = async (req, res) => {
+    const review = req.body;
+    if (!review.user_id || !review.tour_id || !review.rating || !review.comment || !review.review_date) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const newReview = await Review.createReview(review);
+    res.status(201).json(newReview);
 };  
 
-const deleteReviewController = async (req, res) => {
-    const reviewId = req.params.reviewId;
-    const review = await deleteReview(reviewId);
+const getReviewById = async (req, res) => {
+    const reviewId = req.params.id;
+    if (!reviewId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const review = await Review.getReviewById(reviewId);
     res.status(200).json(review);
-};  
+};    
 
-const getAllReviewsController = async (req, res) => {
-    const reviews = await getAllReviews();
-    res.status(200).json(reviews);
-};
+const updateReview = async (req, res) => {
+    const reviewId = req.params.id;
+    if (!reviewId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const review = req.body;
+    if (!review) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const updatedReview = await Review.updateReview(reviewId, review);
+    res.status(200).json(updatedReview);
+};    
 
-const getReviewsByUserIdController = async (req, res) => {
-    const userId = req.params.userId;
-    const reviews = await getReviewsByUserId(userId);
-    res.status(200).json(reviews);
-};
+const deleteReview = async (req, res) => {
+    const reviewId = req.params.id;
+    if (!reviewId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const deletedReview = await Review.deleteReview(reviewId);
+    res.status(200).json(deletedReview);
+};    
 
-const getReviewsByTourIdController = async (req, res) => {
-    const tourId = req.params.tourId;
-    const reviews = await getReviewsByTourId(tourId);
+const getAllReviews = async (req, res) => {
+    const reviews = await Review.getAllReviews();
+    if (!reviews) {
+        return res.status(404).json({ error: 'Reviews not found' });
+    }
     res.status(200).json(reviews);
-};
+};      
 
-const getReviewsByRatingController = async (req, res) => {
-    const rating = req.params.rating;
-    const reviews = await getReviewsByRating(rating);
+const getReviewsByTourId = async (req, res) => {
+    const tourId = req.params.id;
+    if (!tourId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const reviews = await Review.getReviewsByTourId(tourId);
     res.status(200).json(reviews);
-};
+};      
 
-const getReviewsByCommentController = async (req, res) => {
-    const comment = req.params.comment;
-    const reviews = await getReviewsByComment(comment);
+const getReviewsByUserId = async (req, res) => {
+    const userId = req.params.id;
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const reviews = await Review.getReviewsByUserId(userId);
     res.status(200).json(reviews);
-};
-
-const getReviewsByReviewDateController = async (req, res) => {
-    const reviewDate = req.params.reviewDate;
-    const reviews = await getReviewsByReviewDate(reviewDate);
-    res.status(200).json(reviews);
-};
+};        
 
 module.exports = {
-    createReviewController,
-    getReviewByIdController,
-    updateReviewController,
-    deleteReviewController,
-    getAllReviewsController,
-    getReviewsByUserIdController,
-    getReviewsByTourIdController,
-    getReviewsByRatingController,
-    getReviewsByCommentController,
-    getReviewsByReviewDateController    
-};      
+    createReview,
+    getReviewById,
+    updateReview,
+    deleteReview,
+    getAllReviews,
+    getReviewsByTourId,
+    getReviewsByUserId
+};

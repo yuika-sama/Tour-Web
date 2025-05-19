@@ -12,6 +12,7 @@ const paymentsRoute = require('./routes/payments.route');
 const passwordResetsRoute = require('./routes/password_resets.route');
 const bookingsRoute = require('./routes/bookings.route');
 const reviewsRoute = require('./routes/reviews.route');
+const authRoute = require('./routes/auth.route');
     
 app.use(cors());
 app.use(express.json());
@@ -24,6 +25,9 @@ app.use('/payments', paymentsRoute);
 app.use('/passwordresets', passwordResetsRoute);
 app.use('/bookings', bookingsRoute);
 app.use('/reviews', reviewsRoute);
+app.use('/auth', authRoute);
+
+
 
 app.use('/', (req, res)=>{
     res.send("Hello World")
