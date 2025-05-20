@@ -15,7 +15,7 @@ const User = {
         allowNull: false,
         unique: true
     },
-    password: {
+    password_hash: {
         type: String,
         allowNull: false
     },
@@ -45,45 +45,46 @@ const User = {
 
 module.exports = {
     createUser: async(userData) => {
-        const { full_name, email, password, phone_number, auth_provider, provider_id } = userData;
-        userData.created_at = new Date();
-        userData.updated_at = new Date();
-        const query = `INSERT INTO users (full_name, email, password, phone_number, auth_provider, provider_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
-        const result = await pool.query(query, [full_name, email, password, phone_number, auth_provider, provider_id, userData.created_at, userData.updated_at]);
-        return result.rows[0];
+        const { full_name, email, password_hash, phone_number, auth_provider, provider_id } = userData;
+        const updated_at = new Date();
+        const created_at = new Date();
+        const query = `INSERT INTO users (full_name, email, password_hash, phone_number, auth_provider, provider_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        const result = await pool.query(query, [full_name, email, password_hash, phone_number, auth_provider, provider_id, created_at, updated_at]);
+        const [user] = await pool.query('SELECT * FROM users WHERE user_id = ?', [result.insertId]);
+        return user[0];
     },
     getUserById: async(id) => {
-        const query = `SELECT * FROM users WHERE user_id = $1`;
-        const result = await pool.query(query, [id]);
-        return result.rows[0];
+        const query = `SELECT * FROM users WHERE user_id = ?`;
+        const [rows] = await pool.query(query, [id]);
+        return rows[0];
     },
     updateUser: async(id, userData) => {
-        const { full_name, email, password, phone_number, auth_provider, provider_id } = userData;
-        userData.updated_at = new Date();
-        const query = `UPDATE users SET full_name = $1, email = $2, password = $3, phone_number = $4, auth_provider = $5, provider_id = $6, updated_at = $7 WHERE user_id = $8`;
-        const result = await pool.query(query, [full_name, email, password, phone_number, auth_provider, provider_id, updated_at, id]);
-        return result.rows[0];
+        const { full_name, email, password_hash, phone_number, auth_provider, provider_id } = userData;
+        const updated_at = new Date();
+        const query = `UPDATE users SET full_name = ?, email = ?, password_hash = ?, phone_number = ?, auth_provider = ?, provider_id = ?, updated_at = ? WHERE user_id = ?`;
+        const [result] = await pool.query(query, [full_name, email, password_hash, phone_number, auth_provider, provider_id, updated_at, id]);
+        return result[0];
     },
     deleteUser: async(id) => {
-        const query = `DELETE FROM users WHERE user_id = $1`;
-        const result = await pool.query(query, [id]);
-        return result.rows[0];
+        const query = `DELETE FROM users WHERE user_id = ?`;
+        const [result] = await pool.query(query, [id]);
+        return result[0];
     },
     getAllUsers: async() => {
         const query = `SELECT * FROM users`;
         const result = await pool.query(query);
-        return result.rows;
+        return result[0];
     },
     updateUserInformation: async(id, userData) => {
-        const { full_name, phone_number, password } = userData;
-        userData.updated_at = new Date();
-        const query = `UPDATE users SET full_name = $1, phone_number = $2, updated_at = $3 WHERE user_id = $4`;
-        const result = await pool.query(query, [full_name, phone_number, updated_at, id]);
-        return result.rows[0];
+        const { full_name, phone_number, password_hash } = userData;
+        const updated_at = new Date();
+        const query = `UPDATE users SET full_name = ?, phone_number = ?, password_hash = ?, updated_at = ? WHERE user_id = ?`;
+        const [result] = await pool.query(query, [full_name, phone_number, password_hash, updated_at, id]);
+        return result[0];
     },
     getUserByEmail: async(email) => {
-        const query = `SELECT * FROM users WHERE email = $1`;
+        const query = "SELECT * FROM users WHERE email = ?";
         const result = await pool.query(query, [email]);
-        return result.rows[0];
+        return result[0];
     }
 }

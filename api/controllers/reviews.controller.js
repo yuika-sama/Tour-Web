@@ -6,7 +6,7 @@ const createReview = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const newReview = await Review.createReview(review);
-    res.status(201).json(newReview);
+    res.status(201).json({ message: 'Review created successfully', newReview });
 };  
 
 const getReviewById = async (req, res) => {
@@ -15,7 +15,7 @@ const getReviewById = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const review = await Review.getReviewById(reviewId);
-    res.status(200).json(review);
+    res.status(200).json({ message: 'Review retrieved successfully', review });
 };    
 
 const updateReview = async (req, res) => {
@@ -28,7 +28,7 @@ const updateReview = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const updatedReview = await Review.updateReview(reviewId, review);
-    res.status(200).json(updatedReview);
+    res.status(200).json({ message: 'Review updated successfully', updatedReview });
 };    
 
 const deleteReview = async (req, res) => {
@@ -37,7 +37,7 @@ const deleteReview = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const deletedReview = await Review.deleteReview(reviewId);
-    res.status(200).json(deletedReview);
+    res.status(200).json({ message: 'Review deleted successfully', deletedReview });
 };    
 
 const getAllReviews = async (req, res) => {
@@ -45,7 +45,7 @@ const getAllReviews = async (req, res) => {
     if (!reviews) {
         return res.status(404).json({ error: 'Reviews not found' });
     }
-    res.status(200).json(reviews);
+    res.status(200).json({ message: 'Reviews retrieved successfully', reviews });
 };      
 
 const getReviewsByTourId = async (req, res) => {
@@ -54,7 +54,7 @@ const getReviewsByTourId = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const reviews = await Review.getReviewsByTourId(tourId);
-    res.status(200).json(reviews);
+    res.status(200).json({ message: 'Reviews retrieved successfully', reviews });
 };      
 
 const getReviewsByUserId = async (req, res) => {
@@ -63,7 +63,7 @@ const getReviewsByUserId = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const reviews = await Review.getReviewsByUserId(userId);
-    res.status(200).json(reviews);
+    res.status(200).json({ message: 'Reviews retrieved successfully', reviews });
 };        
 
 module.exports = {

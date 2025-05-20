@@ -8,5 +8,4 @@ router.put('/:id', updateTourMedia);
 router.delete('/:id', deleteTourMedia);
 router.get('/', getAllTourMedia);
 router.get('/tour/:id', getTourMediaByTourId);
-router.get('/user/:id', getTourMediaByUserId);
 module.exports = router;    

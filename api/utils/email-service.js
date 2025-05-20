@@ -1,28 +1,16 @@
 const nodemailer = require('nodemailer');
+require("dotenv").config()
 
 const createTransporter = async () => {
-    if(!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        throw new Error('Email credentials are not set');
-    }
-    if (!process.env.NODE_ENV === 'production') {
-        return nodemailer.createTransport({
-           host: process.env.EMAIL_HOST,
-           port: process.env.EMAIL_PORT,
-           secure: process.env.EMAIL_SECURE === 'true',
-           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-           }
-        }); 
-    }
     return nodemailer.createTransport({
-        host: 'sandbox.smtp.mailtrap.io',
-        port: 2525,
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: process.env.EMAIL_SECURE === 'true',
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      });
 };
 
 const sendPasswordResetEmail = async (email, resetUrl, name) => {
@@ -49,11 +37,13 @@ const sendPasswordResetEmail = async (email, resetUrl, name) => {
         `,
     };
     try {
-        await transporter.sendMail(mailOptions);
-        console.log('Password reset email sent successfully');
+        console.log("Sending email to", email);
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Password reset email sent successfully: ', info.messageId);
+        return info;
     } catch (error) {
         console.error('Error sending email:', error);
-        throw new Error('Failed to send email');
+        throw new Error('Failed to send email: ' + error.message);
     }
 };
 

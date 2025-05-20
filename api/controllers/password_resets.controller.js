@@ -3,19 +3,22 @@ const User = require("../models/users.model")
 const bcrypt = require("bcrypt")
 const crypto = require("crypto")
 const { sendPasswordResetEmail } = require("../utils/email-service")
+const { TokenExpiredError } = require("jsonwebtoken")
+require("dotenv").config()
 
 const createPasswordReset = async(req, res) => {
-    const passwordReset = req.body
-    if (!passwordReset.email) {
+    const { email, token, expires_at } = req.body
+    if (!email) {
         return res.status(400).json({ message: "Email is required" })
     }
-    if (!passwordReset.token) {
+    if (!token) {
         return res.status(400).json({ message: "Token is required" })
     }
-    if (!passwordReset.expiresAt) {
+    if (!expires_at) {
         return res.status(400).json({ message: "Expires at is required" })
     }
-    const newPasswordReset = await PasswordReset.createPasswordReset(passwordReset)
+    const expiresAt = new Date(expires_at)
+    const newPasswordReset = await PasswordReset.createPasswordReset({ email, token, expires_at: expiresAt })
     if (!newPasswordReset) {
         return res.status(400).json({ message: "Failed to create password reset" })
     }
@@ -28,9 +31,6 @@ const getPasswordResetById = async(req, res) => {
         return res.status(400).json({ message: "Reset id is required" })
     }
     const passwordReset = await PasswordReset.getPasswordResetById(resetId)
-    if (!passwordReset) {
-        return res.status(404).json({ message: "Password reset not found" })
-    }
     res.status(200).json(passwordReset)
 }
 
@@ -52,7 +52,8 @@ const updatePasswordReset = async(req, res) => {
     if (!passwordReset.expiresAt) {
         return res.status(400).json({ message: "Expires at is required" })
     }
-    passwordReset.updatedAt = new Date()
+    passwordReset.updated_at = new Date()
+    passwordReset.expires_at = passwordReset.expiresAt
     const updatedPasswordReset = await PasswordReset.updatePasswordReset(resetId, passwordReset)
     if (!updatedPasswordReset) {
         return res.status(400).json({ message: "Failed to update password reset" })
@@ -97,21 +98,26 @@ const requestPasswordReset = async(req, res) => {
     if (!email) {
         return res.status(400).json({ message: "Email is required" })
     }
-    const user = await User.getUserByEmail(email)
-    if (!user) {
-        return res.status(404).json({ message: "User not found" })
+    try{
+        const user = await User.getUserByEmail(email)
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+        const token = crypto.randomBytes(32).toString("hex")
+        const expiresAt = new Date()
+        expiresAt.setHours(expiresAt.getHours() + 1)
+        await PasswordReset.deleteByEmail(email)
+        const passwordReset = await PasswordReset.createPasswordReset({ email, token, expires_at: expiresAt })
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
+        try{
+            await sendPasswordResetEmail(email, resetUrl, user.full_name)
+        }catch(error){
+            return res.status(400).json({ message: "Failed to send email: " + error.message })
+        }
+        res.status(200).json({message: "Password reset email sent successfully", passwordReset})
+    } catch(error){
+        return res.status(400).json({ message: "Failed to request password reset: " + error.message })
     }
-    const token = crypto.randomBytes(32).toString("hex")
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 1)
-    await PasswordReset.deleteByEmail(email)
-    const passwordReset = await PasswordReset.createPasswordReset({ email, token, expiresAt })
-    if (!passwordReset) {
-        return res.status(400).json({ message: "Failed to create password reset" })
-    }
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
-    await sendPasswordResetEmail(email, resetUrl, user.name)
-    res.status(200).json(passwordReset)
 }
 const verifyResetToken = async(req, res) => {
     const { token } = req.params
@@ -123,7 +129,7 @@ const verifyResetToken = async(req, res) => {
         return res.status(404).json({ message: "Password reset not found" })
     }
     const now = new Date()
-    if (now > new Date(passwordReset.expiresAt)) {
+    if (now > new Date(passwordReset.expires_at)) {
         return res.status(400).json({ message: "Token expired" })
     }
     res.status(200).json(passwordReset)
@@ -142,11 +148,8 @@ const resetPassword = async(req, res) => {
             .json({ message: "Password must be at least 8 characters long and contain at least one number and one letter" })
     }
     const passwordReset = await PasswordReset.findByToken(token)
-    if (!passwordReset) {
-        return res.status(404).json({ message: "Password reset not found" })
-    }
     const now = new Date()
-    if (now > new Date(passwordReset.expiresAt)) {
+    if (now > new Date(passwordReset.expires_at)) {
         return res.status(400).json({ message: "Token expired" })
     }
     const user = await User.getUserByEmail(passwordReset.email)
@@ -155,19 +158,35 @@ const resetPassword = async(req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10)
     const updatedUser = {
-        ...user,
-        password: hashedPassword,
-        updatedAt: new Date(),
+        user_id: user.user_id,
+        full_name: user.full_name,
+        email: user.email,
+        password_hash: hashedPassword,
+        phone_number: user.phone_number,
+        auth_provider: user.auth_provider,
+        provider_id: user.provider_id,
+        updated_at: new Date(),
     }
-    await User.updateUser(user.id, updatedUser)
+    await User.updateUser(user.user_id, updatedUser)
+    const newToken = "USED-" + crypto.randomBytes(32).toString("hex")
+    const newExpiresAt = new Date()
+    const email = user.email
+    console.log(email)
+    newExpiresAt.setHours(newExpiresAt.getHours() + 1)
     await PasswordReset.deleteByToken(token)
     const newPasswordReset = {
-        email: user.email,
-        token: "USED-" + crypto.randomBytes(32).toString("hex"),
-        expiresAt: new Date(),
+        email: email,
+        token: newToken,
+        expires_at: newExpiresAt,
     }
     await PasswordReset.createPasswordReset(newPasswordReset)
-    res.status(200).json({ message: "Password reset successful", newPasswordReset })
+    res.status(200).json({message: "Password reset successful", updatedUser})
+}
+const findByToken = async(req, res) => {
+    const { token } = req.params
+    if (!token) {
+        return res.status(400).json({ message: "Token is required" })
+    }
 }
 module.exports = {
     createPasswordReset,
@@ -179,4 +198,5 @@ module.exports = {
     requestPasswordReset,
     verifyResetToken,
     resetPassword,
+    findByToken,
 }

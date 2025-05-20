@@ -29,9 +29,11 @@ const PasswordReset = {
 module.exports = {
     createPasswordReset: async(passwordReset) => {
         try {
-            const query = `INSERT INTO password_resets (email, token, expires_at) VALUES ($1, $2, $3)`;
-            const result = await pool.query(query, [passwordReset.email, passwordReset.token, passwordReset.expires_at]);
-            return result.rows[0];
+            const { email, token, expires_at } = passwordReset;
+            const updated_at = new Date();
+            const query = `INSERT INTO password_resets (email, token, expires_at, updated_at) VALUES (?, ?, ?, ?)`;
+            const [result] = await pool.query(query, [email, token, expires_at, updated_at]);
+            return result[0];
         } catch (error) {
             console.error('Error creating password reset:', error);
             throw new Error('Failed to create password reset');
@@ -39,9 +41,9 @@ module.exports = {
     },
     getPasswordResetById: async(resetId) => {
         try {
-            const query = `SELECT * FROM password_resets WHERE reset_id = $1`;
-            const result = await pool.query(query, [resetId]);
-            return result.rows[0];
+            const query = `SELECT * FROM password_resets WHERE reset_id = ?`;
+            const [result] = await pool.query(query, [resetId]);
+            return result[0];
         } catch (error) {
             console.error('Error getting password reset by id:', error);
             throw new Error('Failed to get password reset by id');
@@ -49,9 +51,11 @@ module.exports = {
     },
     updatePasswordReset: async(resetId, passwordReset) => {
         try {
-            const query = `UPDATE password_resets SET email = $1, token = $2, expires_at = $3 WHERE reset_id = $4`;
-            const result = await pool.query(query, [passwordReset.email, passwordReset.token, passwordReset.expires_at, resetId]);
-            return result.rows[0];
+            const { email, token, expires_at } = passwordReset;
+            const updated_at = new Date();
+            const query = `UPDATE password_resets SET email = ?, token = ?, expires_at = ?, updated_at = ? WHERE reset_id = ?`;
+            const [result] = await pool.query(query, [email, token, expires_at, updated_at, resetId]);
+            return result[0];
         } catch (error) {
             console.error('Error updating password reset:', error);
             throw new Error('Failed to update password reset');
@@ -59,9 +63,9 @@ module.exports = {
     },
     deletePasswordReset: async(resetId) => {
         try {
-            const query = `DELETE FROM password_resets WHERE reset_id = $1`;
-            const result = await pool.query(query, [resetId]);
-            return result.rows[0];
+            const query = `DELETE FROM password_resets WHERE reset_id = ?`;
+            const [result] = await pool.query(query, [resetId]);
+            return result[0];
         } catch (error) {
             console.error('Error deleting password reset:', error);
             throw new Error('Failed to delete password reset');
@@ -70,8 +74,8 @@ module.exports = {
     getAllPasswordResets: async() => {
         try {
             const query = `SELECT * FROM password_resets`;
-            const result = await pool.query(query);
-            return result.rows;
+            const [result] = await pool.query(query);
+            return result;
         } catch (error) {
             console.error('Error getting all password resets:', error);
             throw new Error('Failed to get all password resets');
@@ -79,29 +83,24 @@ module.exports = {
     },
     findByEmail: async(email) => {
         try {
-            const query = `SELECT * FROM password_resets WHERE email = $1`;
-            const result = await pool.query(query, [email]);
-            return result.rows[0];
+            const query = `SELECT * FROM password_resets WHERE email = ?`;
+            const [result] = await pool.query(query, [email]);
+            return result[0];
         } catch (error) {
             console.error('Error finding password reset by email:', error);
             throw new Error('Failed to find password reset by email');
         }
     },
     findByToken: async(token) => {
-        try {
-            const query = `SELECT * FROM password_resets WHERE token = $1`;
-            const result = await pool.query(query, [token]);
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error finding password reset by token:', error);
-            throw new Error('Failed to find password reset by token');
-        }
+        const query = `SELECT * FROM password_resets WHERE token = ?`;
+        const [result] = await pool.query(query, [token]);
+        return result;
     },
     deleteByEmail: async(email) => {
         try {
-            const query = `DELETE FROM password_resets WHERE email = $1`;
-            const result = await pool.query(query, [email]);
-            return result.rows[0];
+            const query = `DELETE FROM password_resets WHERE email = ?`;
+            const [result] = await pool.query(query, [email]);
+            return result[0];
         } catch (error) {
             console.error('Error deleting password reset by email:', error);
             throw new Error('Failed to delete password reset by email');
@@ -109,9 +108,9 @@ module.exports = {
     },
     deleteByToken: async(token) => {
         try {
-            const query = `DELETE FROM password_resets WHERE token = $1`;
-            const result = await pool.query(query, [token]);
-            return result.rows[0];
+            const query = `DELETE FROM password_resets WHERE token = ?`;
+            const [result] = await pool.query(query, [token]);
+            return result[0];
         } catch (error) {
             console.error('Error deleting password reset by token:', error);
             throw new Error('Failed to delete password reset by token');

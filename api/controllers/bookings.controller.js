@@ -6,37 +6,37 @@ const createBooking = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const newBooking = await Booking.createBooking(booking);
-    res.status(201).json(newBooking);
+    res.status(201).json({ message: 'Booking created successfully', newBooking });
 };
 
 const getBookingById = async (req, res) => {
     const booking_id = req.params.booking_id;
     const booking = await Booking.getBookingById(booking_id);
-    res.status(200).json(booking);
+    res.status(200).json({ message: 'Booking retrieved successfully', booking });
 };
 
 const getAllBookings = async (req, res) => {
     const bookings = await Booking.getAllBookings();
-    res.status(200).json(bookings);
+    res.status(200).json({ message: 'Bookings retrieved successfully', bookings });
 };
 
 const updateBooking = async (req, res) => {
     const booking_id = req.params.booking_id;
     const booking = req.body;
     const updatedBooking = await Booking.updateBooking(booking_id, booking);
-    res.status(200).json(updatedBooking);
+    res.status(200).json({ message: 'Booking updated successfully', updatedBooking });
 };
 
 const deleteBooking = async (req, res) => {
     const booking_id = req.params.booking_id;
     const deletedBooking = await Booking.deleteBooking(booking_id);
-    res.status(200).json(deletedBooking);
+    res.status(200).json({ message: 'Booking deleted successfully', deletedBooking });
 };
 
 const getBookingsByUserId = async (req, res) => {
     const user_id = req.params.user_id;
     const bookings = await Booking.getBookingsByUserId(user_id);
-    res.status(200).json(bookings);
+    res.status(200).json({ message: 'Bookings retrieved successfully', bookings });
 };
 
 module.exports = {

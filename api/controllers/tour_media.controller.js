@@ -2,13 +2,12 @@ const TourMediaModel = require("../models/tour_media.model")
 
 const createTourMedia = async (req, res) => {
     const tourMedia = req.body;
-    if (!tourMedia.tour_id || !tourMedia.media_type || !tourMedia.url || !tourMedia.caption || !tourMedia.updated_at) {
+    if (!tourMedia.tour_id || !tourMedia.media_type || !tourMedia.url || !tourMedia.caption) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
-    tourMedia.created_at = new Date();
-    tourMedia.updated_at = new Date();
+    tourMedia.updated_at = new Date();  
     const newTourMedia = await TourMediaModel.createTourMedia(tourMedia);
-    res.status(201).json(newTourMedia);
+    res.status(201).json({ message: 'Tour media created successfully', newTourMedia });
 };
 
 const getTourMediaById = async (req, res) => {
@@ -17,7 +16,7 @@ const getTourMediaById = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const tourMedia = await TourMediaModel.getTourMediaById(tourMediaId);
-    res.status(200).json(tourMedia);
+    res.status(200).json({ message: 'Tour media retrieved successfully', tourMedia });
 };
 
 const updateTourMedia = async (req, res) => {
@@ -31,7 +30,7 @@ const updateTourMedia = async (req, res) => {
     }
     tourMedia.updated_at = new Date();
     const updatedTourMedia = await TourMediaModel.updateTourMedia(tourMediaId, tourMedia);
-    res.status(200).json(updatedTourMedia);
+    res.status(200).json({ message: 'Tour media updated successfully', updatedTourMedia });
 };  
 
 const deleteTourMedia = async (req, res) => {
@@ -40,12 +39,12 @@ const deleteTourMedia = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const deletedTourMedia = await TourMediaModel.deleteTourMedia(tourMediaId);
-    res.status(200).json(deletedTourMedia);
+    res.status(200).json({ message: 'Tour media deleted successfully', deletedTourMedia });
 };
 
 const getAllTourMedia = async (req, res) => {
     const tourMedia = await TourMediaModel.getAllTourMedia();
-    res.status(200).json(tourMedia);
+    res.status(200).json({ message: 'Tour media retrieved successfully', tourMedia });
 };
 
 const getTourMediaByTourId = async (req, res) => {
@@ -54,17 +53,8 @@ const getTourMediaByTourId = async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     const tourMedia = await TourMediaModel.getTourMediaByTourId(tourId);
-    res.status(200).json(tourMedia);
-};
-
-const getTourMediaByUserId = async (req, res) => {
-    const userId = req.params.id;
-    if (!userId) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-    const tourMedia = await TourMediaModel.getTourMediaByUserId(userId);
-    res.status(200).json(tourMedia);
-};  
+    res.status(200).json({ message: 'Tour media retrieved successfully', tourMedia });
+}; 
 
 
 module.exports = {
@@ -74,5 +64,4 @@ module.exports = {
     deleteTourMedia,
     getAllTourMedia,
     getTourMediaByTourId,
-    getTourMediaByUserId,
 };  

@@ -17,7 +17,7 @@ const createTour = async (req, res) => {
             updated_at: new Date()
         });
         
-        res.status(201).json(tour);
+        res.status(201).json({message: 'Tour created successfully', tour});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -31,9 +31,6 @@ const getTourById = async (req, res) => {
         }
         
         const tour = await tourModel.getTourById(tour_id);
-        if (!tour) {
-            return res.status(404).json({ message: 'Tour not found' });
-        }
         
         res.status(200).json(tour);
     } catch (error) {
@@ -59,7 +56,7 @@ const updateTour = async (req, res) => {
             updated_at: new Date()
         });
         
-        res.status(200).json(updatedTour);
+        res.status(200).json({message: 'Tour updated successfully', updatedTour});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -73,7 +70,7 @@ const deleteTour = async (req, res) => {
         }
         
         await tourModel.deleteTour(tour_id);
-        res.status(204).send();
+        res.status(204).send({message: 'Tour deleted successfully'});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -82,7 +79,7 @@ const deleteTour = async (req, res) => {
 const getAllTours = async (req, res) => {
     try {
         const tours = await tourModel.getAllTours();
-        res.status(200).json(tours);
+        res.status(200).json({message: 'Tours fetched successfully', tours});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -95,7 +92,7 @@ const getToursReview = async (req, res) => {
             return res.status(400).json({ message: 'Tour ID is required' });
         }
         const reviews = await tourModel.getToursReview(tour_id);
-        res.status(200).json(reviews);
+        res.status(200).json({message: 'Tours reviews fetched successfully', reviews});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -108,7 +105,7 @@ const countToursReviewByRating = async (req, res) => {
             return res.status(400).json({ message: 'Tour ID and rating are required' });
         }
         const count = await tourModel.countToursReviewByRating(tour_id, rating);
-        res.status(200).json(count);
+        res.status(200).json({message: 'Tours reviews count fetched successfully', count});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -121,7 +118,7 @@ const getAverageToursReview = async (req, res) => {
             return res.status(400).json({ message: 'Tour ID is required' });
         }
         const averageRating = await tourModel.getAverageToursReview(tour_id);
-        res.status(200).json(averageRating);
+        res.status(200).json({message: 'Tours average rating fetched successfully', averageRating});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -135,11 +132,8 @@ const getTourDetails = async (req, res) => {
         }
         
         const tour = await tourModel.getToursInforAndMedia(tour_id);
-        if (!tour) {
-            return res.status(404).json({ message: 'Tour not found' });
-        }
         
-        res.status(200).json(tour);
+        res.status(200).json({message: 'Tour details fetched successfully', tour});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -150,26 +144,28 @@ const searchTours = async (req, res) => {
         const filters = {
             title: req.query.title,
             location: req.query.location,
-            min_price: req.query.min_price ? parseFloat(req.query.min_price) : null,
-            max_price: req.query.max_price ? parseFloat(req.query.max_price) : null,
-            duration: req.query.duration ? parseInt(req.query.duration) : null,
-            rating: req.query.rating ? parseFloat(req.query.rating) : null
+            min_price: req.query.min_price !== undefined ? parseFloat(req.query.min_price) : null,
+            max_price: req.query.max_price !== undefined ? parseFloat(req.query.max_price) : null,
+            duration: req.query.duration !== undefined ? parseInt(req.query.duration) : null,
+            rating: req.query.rating !== undefined ? parseFloat(req.query.rating) : null
         };
 
         const tours = await tourModel.searchTours(filters);
-        res.status(200).json(tours);
+        if (!tours || tours.length === 0) {
+            return res.status(404).json({ message: 'No tours found' });
+        }
+        res.status(200).json({message: 'Tours fetched successfully', tours});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 const getRecommendedTours = async (req, res) => {
-    try {
-        const tours = await tourModel.getRecommendedTours();
-        res.status(200).json(tours);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    const tours = await tourModel.getRecommendTours();
+    if (!tours || tours.length === 0) {
+        return res.status(404).json({ message: 'No tours found' });
     }
+    res.status(200).json({message: 'Tours fetched successfully', tours});
 };
 
 const getToursByAverageRating = async (req, res) => {

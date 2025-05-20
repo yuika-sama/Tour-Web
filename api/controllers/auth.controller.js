@@ -1,5 +1,4 @@
-const { User } = require('../models/users.model');
-const { PasswordReset } = require('../models/password_resets.model');
+const User = require('../models/users.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { addToBlacklist, isBlacklisted } = require('../utils/token-blacklist');
@@ -16,17 +15,24 @@ const register = async (req, res) => {
     if (password.length < 8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
         return res.status(400).json({ message: 'Password must be at least 8 characters long and contain at least one number and one letter' });
     }
+    if (email === undefined || email === null || email === '') {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+    if (password === undefined || password === null || password === '') {
+        return res.status(400).json({ message: 'Password is required' });
+    }
     const existingUser = await User.getUserByEmail(email);
-    if (existingUser) {
+    if (existingUser.length > 0) {
+        console.log({existingUser});
         return res.status(400).json({ message: 'User already exists' });
     }
+
     const auth_provider = 'local';
-    const provider_id = email;
+    const provider_id = null;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const created_at = new Date();
-    const updated_at = new Date();
-    const user = await User.createUser(full_name, email, hashedPassword, phone_number, auth_provider, provider_id, created_at, updated_at);
-    res.status(201).json(user);
+    const userData = {full_name, email, password_hash: hashedPassword, phone_number, auth_provider, provider_id};
+    const user = await User.createUser(userData);
+    res.status(201).json({message: 'User created successfully', userData});
 };
 
 const login = async (req, res) => {
@@ -34,15 +40,21 @@ const login = async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
+    if (email === undefined || email === null || email === '') {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+    if (password === undefined || password === null || password === '') {
+        return res.status(400).json({ message: 'Password is required' });
+    }
     const user = await User.getUserByEmail(email);
     if (!user) {
         return res.status(400).json({ message: 'User not found' });
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
         return res.status(400).json({ message: 'Invalid password' });
     }   
-    const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.user_id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token });
 };
 

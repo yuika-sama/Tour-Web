@@ -45,9 +45,9 @@ const Payment = {
 
 module.exports = {
     createPayment: async (paymentData) => {
-        const { booking_id, payment_method, amount, status, transaction_id } = paymentData;
-        paymentData.created_at = new Date();
-        paymentData.updated_at = new Date();
+        const { booking_id, payment_method, amount, status, transaction_id, payment_date } = paymentData;
+        const created_at = new Date();
+        const updated_at = new Date();
         if (!paymentData.payment_method) {
             paymentData.payment_method = 'cash';
         }
@@ -57,51 +57,50 @@ module.exports = {
         if (!paymentData.transaction_id) {
             paymentData.transaction_id = '0';
         }
-        const query = `INSERT INTO payments (booking_id, payment_method, amount, status, transaction_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
-        const result = await pool.query(query, [booking_id, payment_method, amount, status, transaction_id, paymentData.created_at, paymentData.updated_at]);
-        return result.rows[0];
+        const query = `INSERT INTO payments (booking_id, payment_method, amount, status, transaction_id, payment_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        const [result] = await pool.query(query, [booking_id, payment_method, amount, status, transaction_id, payment_date, created_at, updated_at]);
+        return result;
     },
     getPaymentById: async (paymentId) => {
-        const query = `SELECT * FROM payments WHERE payment_id = $1`;
-        const result = await pool.query(query, [paymentId]);
-        return result.rows[0];
+        const query = `SELECT * FROM payments WHERE payment_id = ?`;
+        const [result] = await pool.query(query, [paymentId]);
+        return result[0];
     },
     updatePayment: async (paymentId, paymentData) => {
-        const { booking_id, payment_method, amount, status, transaction_id } = paymentData; 
-        paymentData.updated_at = new Date();
-        
-        const query = `UPDATE payments SET booking_id = $1, payment_method = $2, amount = $3, status = $4, transaction_id = $5, updated_at = $6 WHERE payment_id = $7`;
-        const result = await pool.query(query, [booking_id, payment_method, amount, status, transaction_id, paymentData.updated_at, paymentId]);
-        return result.rows[0];
+        const { booking_id, payment_method, amount, status, transaction_id, payment_date } = paymentData; 
+        const updated_at = new Date();
+        const query = `UPDATE payments SET booking_id = ?, payment_method = ?, amount = ?, status = ?, transaction_id = ?, payment_date = ?, updated_at = ? WHERE payment_id = ?`;
+        const [result] = await pool.query(query, [booking_id, payment_method, amount, status, transaction_id, payment_date, updated_at, paymentId]);
+        return result[0];
     },
     deletePayment: async (paymentId) => {
-        const query = `DELETE FROM payments WHERE payment_id = $1`;
-        const result = await pool.query(query, [paymentId]);
-        return result.rows[0];
+        const query = `DELETE FROM payments WHERE payment_id = ?`;
+        const [result] = await pool.query(query, [paymentId]);
+        return result[0];
     },
     getAllPayments: async () => {
         const query = `SELECT * FROM payments`;
         const result = await pool.query(query);
-        return result.rows;
+        return result[0];
     },
     findByBookingId: async (bookingId) => { 
-        const query = `SELECT * FROM payments WHERE booking_id = $1`;
-        const result = await pool.query(query, [bookingId]);
-        return result.rows;
+        const query = `SELECT * FROM payments WHERE booking_id = ?`;
+        const [result] = await pool.query(query, [bookingId]);
+        return result[0];
     },
     findByPaymentMethod: async (paymentMethod) => {
-        const query = `SELECT * FROM payments WHERE payment_method = $1`;
+        const query = `SELECT * FROM payments WHERE payment_method = ?`;
         const result = await pool.query(query, [paymentMethod]);
-        return result.rows;
+        return result[0];
     },
     findByTransactionId: async (transactionId) => {
-        const query = `SELECT * FROM payments WHERE transaction_id = $1`;
-        const result = await pool.query(query, [transactionId]);
-        return result.rows;
+        const query = `SELECT * FROM payments WHERE transaction_id = ?`;
+        const [result] = await pool.query(query, [transactionId]);
+        return result[0];
     },
     findByStatus: async (status) => {
-        const query = `SELECT * FROM payments WHERE status = $1`;
+        const query = `SELECT * FROM payments WHERE status = ?`;
         const result = await pool.query(query, [status]);
-        return result.rows;
+        return result[0];
     }
 };

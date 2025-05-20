@@ -1,19 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const toursController = require('../controllers/tours.controller');
+const { createTour, getAllTours, getTourById, updateTour, deleteTour, getRecommendedTours, searchTours, getTourDetails, getToursByAverageRating, getToursReview, countToursReviewByRating, getAverageToursReview } = require('../controllers/tours.controller');
 
-router.post('/', toursController.createTour);
-router.get('/', toursController.getAllTours);
-router.get('/:tour_id', toursController.getTourById);
-router.put('/:tour_id', toursController.updateTour);
-router.delete('/:tour_id', toursController.deleteTour);
-router.get('/recommended', toursController.getRecommendedTours);
-router.get('/search', toursController.searchTours);
-router.get('/:tour_id/detail', toursController.getTourDetails);
-router.get('/average_rating/:average_rating', toursController.getToursByAverageRating);
-router.get('/:tour_id/reviews', toursController.getToursReview);
-router.get('/:tour_id/reviews/count/:rating', toursController.countToursReviewByRating);
-router.get('/:tour_id/reviews/average', toursController.getAverageToursReview);
-
+router.get('/recommended', getRecommendedTours);
+router.get('/search', searchTours);
+router.get('/:tour_id/details', getTourDetails);
+router.get('/average_rating/:average_rating', getToursByAverageRating);
+router.get('/:tour_id/reviews', getToursReview);
+router.get('/:tour_id/reviews/count/:rating', countToursReviewByRating);
+router.get('/:tour_id/reviews/average', getAverageToursReview);
+router.get('/:tour_id', getTourById);
+router.put('/:tour_id', updateTour);
+router.delete('/:tour_id', deleteTour);
+router.get('/', getAllTours);
+router.post('/', createTour);
 
 module.exports = router;            
