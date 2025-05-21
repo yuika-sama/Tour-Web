@@ -40,15 +40,13 @@ const login = async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
-    if (email === undefined || email === null || email === '') {
-        return res.status(400).json({ message: 'Email is required' });
-    }
-    if (password === undefined || password === null || password === '') {
-        return res.status(400).json({ message: 'Password is required' });
-    }
-    const user = await User.getUserByEmail(email);
-    if (!user) {
+    const users = await User.getUserByEmail(email);
+    if (!users || users.length === 0) {
         return res.status(400).json({ message: 'User not found' });
+    }
+    const user = users[0]
+    if (!user.password_hash){
+        return res.status(404).json({message: "Invalid user data"})
     }
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
@@ -59,20 +57,43 @@ const login = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Unauthorized' });
+    const authHeader = req.headers["authorization"]
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized - Token không hợp lệ" })
     }
-    const token = authHeader.split(' ')[1];
-    try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const exp = decoded.exp;
-        addToBlacklist(token, exp);
-        res.status(200).json({ message: 'Logged out successfully' });
+  
+    const token = authHeader.split(" ")[1]
+  
+    // Kiểm tra JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET không được cấu hình!")
+      return res.status(500).json({ message: "Lỗi cấu hình server" })
+    }
+  
+    try {
+      console.log("Đang xác minh token với secret:", process.env.JWT_SECRET.substring(0, 3) + "...")
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      const exp = decoded.exp
+      addToBlacklist(token, exp)
+      res.status(200).json({ message: "Đăng xuất thành công" })
     } catch (error) {
-        res.status(500).json({ message: 'Failed to logout' });
+      console.error("Lỗi xác minh token:", error.message)
+  
+      if (error.name === "JsonWebTokenError") {
+        return res.status(401).json({
+          message: "Token không hợp lệ",
+          error: error.message,
+          hint: "Hãy kiểm tra lại JWT_SECRET trong file .env và đảm bảo nó giống nhau khi đăng nhập và đăng xuất",
+        })
+      }
+  
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ message: "Token đã hết hạn" })
+      }
+  
+      res.status(500).json({ message: "Đăng xuất thất bại", error: error.message })
     }
-};
+  }
 
 module.exports = {
     register,

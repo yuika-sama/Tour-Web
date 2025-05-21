@@ -105,7 +105,7 @@ const requestPasswordReset = async(req, res) => {
         }
         const token = crypto.randomBytes(32).toString("hex")
         const expiresAt = new Date()
-        expiresAt.setHours(expiresAt.getHours() + 1)
+        expiresAt.setHours(expiresAt.getHours() + 10)
         await PasswordReset.deleteByEmail(email)
         const passwordReset = await PasswordReset.createPasswordReset({ email, token, expires_at: expiresAt })
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
@@ -136,6 +136,7 @@ const verifyResetToken = async(req, res) => {
 }
 const resetPassword = async(req, res) => {
     const { token, password, confirmPassword } = req.body
+    console.log({token, password, confirmPassword})
     if (!token || !password || !confirmPassword) {
         return res.status(400).json({ message: "All fields are required" })
     }
@@ -148,12 +149,15 @@ const resetPassword = async(req, res) => {
             .json({ message: "Password must be at least 8 characters long and contain at least one number and one letter" })
     }
     const passwordReset = await PasswordReset.findByToken(token)
+    console.log(passwordReset)
     const now = new Date()
     if (now > new Date(passwordReset.expires_at)) {
         return res.status(400).json({ message: "Token expired" })
     }
+
     const user = await User.getUserByEmail(passwordReset.email)
-    if (!user) {
+    console.log(user)
+    if (!user || user.length === 0) {
         return res.status(404).json({ message: "User not found" })
     }
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -167,18 +171,19 @@ const resetPassword = async(req, res) => {
         provider_id: user.provider_id,
         updated_at: new Date(),
     }
+    console.log({updatedUser})
     await User.updateUser(user.user_id, updatedUser)
     const newToken = "USED-" + crypto.randomBytes(32).toString("hex")
     const newExpiresAt = new Date()
-    const email = user.email
-    console.log(email)
-    newExpiresAt.setHours(newExpiresAt.getHours() + 1)
-    await PasswordReset.deleteByToken(token)
+    const Useremail = updatedUser.email
+    console.log({newToken, newExpiresAt, Useremail})
+    newExpiresAt.setHours(newExpiresAt.getHours() + 10)
     const newPasswordReset = {
-        email: email,
+        email: Useremail,
         token: newToken,
         expires_at: newExpiresAt,
     }
+    await PasswordReset.deleteByToken(token)
     await PasswordReset.createPasswordReset(newPasswordReset)
     res.status(200).json({message: "Password reset successful", updatedUser})
 }

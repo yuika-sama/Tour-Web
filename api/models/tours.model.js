@@ -98,42 +98,39 @@ module.exports = {
             throw new Error('Failed to get tours by average rating');
         }
     },
+    
     getToursInforAndMedia: async(tour_id) => {
         try {
             const query = `
             SELECT 
             t.*,
-            COALESCE(
-                (
-                    SELECT 
-                        JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'media_id', m.media_id,
-                                'media_type', m.media_type,
-                                'url', m.url,
-                                'caption', m.caption,
-                                'updated_at', m.updated_at
-                            )
-                        )
-                    FROM tour_media m
-                    WHERE m.tour_id = t.tour_id
-                ), JSON_ARRAY()
-            ) AS media,
-            COALESCE(
-                (
-                    SELECT 
-                        JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'day_number', ts.day_number,
-                                'activity', ts.activity
-                            )
-                        )
-                    FROM tour_schedules ts
-                    WHERE ts.tour_id = t.tour_id
-                ), JSON_ARRAY()
-            ) AS schedules
+            COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'media_id', m.media_id,
+                        'media_type', m.media_type,
+                        'url', m.url,
+                        'caption', m.caption,
+                        'updated_at', m.updated_at
+                    )
+                )
+                FROM tour_media m
+                WHERE m.tour_id = t.tour_id
+            ), JSON_ARRAY()) AS media,
+
+            COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'day_number', s.day_number,
+                        'activity', s.activity
+                    )
+                )
+                FROM tour_schedules s
+                WHERE s.tour_id = t.tour_id
+            ), JSON_ARRAY()) AS schedules
+
         FROM tours t
-        WHERE t.tour_id = ?
+        WHERE t.tour_id = ?;
         `
             const [result] = await pool.query(query, [tour_id]);
             return result[0]; // Trả về 1 tour duy nhất
@@ -213,12 +210,12 @@ module.exports = {
                 params.push(`%${location}%`);
             }
             if (min_price !== null && min_price !== undefined) {
-                query += ` AND CAST(price AS DECIMAL) >= ?`;
-                params.push(min_price);
+                query += ` AND price >= ?`;
+                params.push(Number.parseFloat(min_price));
             }
             if (max_price !== null && max_price !== undefined) {
-                query += ` AND CAST(price AS DECIMAL) <= ?`;
-                params.push(max_price);
+                query += ` AND price <= ?`;
+                params.push(Number.parseFloat(max_price));
             }
             if (duration !== null && duration !== undefined) {
                 query += ` AND duration = ?`;

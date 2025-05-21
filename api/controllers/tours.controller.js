@@ -144,12 +144,12 @@ const searchTours = async (req, res) => {
         const filters = {
             title: req.query.title,
             location: req.query.location,
-            min_price: req.query.min_price !== undefined ? parseFloat(req.query.min_price) : null,
-            max_price: req.query.max_price !== undefined ? parseFloat(req.query.max_price) : null,
-            duration: req.query.duration !== undefined ? parseInt(req.query.duration) : null,
-            rating: req.query.rating !== undefined ? parseFloat(req.query.rating) : null
+            min_price: req.query.min_price !== undefined ? Number.parseFloat(req.query.min_price) : null,
+            max_price: req.query.max_price !== undefined ? Number.parseFloat(req.query.max_price) : null,
+            duration: req.query.duration !== undefined ? Number.parseInt(req.query.duration) : null,
+            rating: req.query.rating !== undefined ? Number.parseFloat(req.query.rating) : null
         };
-
+        console.log("Search filters:", filters)
         const tours = await tourModel.searchTours(filters);
         if (!tours || tours.length === 0) {
             return res.status(404).json({ message: 'No tours found' });

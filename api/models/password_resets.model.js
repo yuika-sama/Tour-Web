@@ -93,8 +93,8 @@ module.exports = {
     },
     findByToken: async(token) => {
         const query = `SELECT * FROM password_resets WHERE token = ?`;
-        const [result] = await pool.query(query, [token]);
-        return result;
+        const [rows] = await pool.query(query, [token]);
+        return rows[0];
     },
     deleteByEmail: async(email) => {
         try {
