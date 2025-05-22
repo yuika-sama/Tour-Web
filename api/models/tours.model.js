@@ -179,6 +179,16 @@ module.exports = {
             throw new Error('Failed to get tours review');
         }
     },
+    countToursReview: async(tourId) => {
+        try {
+            const query = `SELECT COUNT(*) as count FROM reviews WHERE tour_id = ?`;
+            const [result] = await pool.query(query, [tourId]);
+            return result[0].count;
+        } catch (error) {
+            console.error('Error getting tours review:', error);
+            throw new Error('Failed to get tours review');
+        }
+    },
     getAverageToursReview: async(tourId) => {
         try {
             const query = `SELECT AVG(rating) as avg_rating FROM reviews WHERE tour_id = ?`;
@@ -201,27 +211,27 @@ module.exports = {
             WHERE 1=1`;
             const params = [];
 
-            if (title !== null && title !== undefined   ) {
+            if (title !== null && title !== undefined && title != NaN) {
                 query += ` AND title LIKE ?`;
                 params.push(`%${title}%`);
             }
-            if (location !== null && location !== undefined) {
+            if (location !== null && location !== undefined && location != NaN) {
                 query += ` AND location LIKE ?`;
                 params.push(`%${location}%`);
             }
-            if (min_price !== null && min_price !== undefined) {
+            if (min_price !== null && min_price !== undefined && min_price != NaN) {
                 query += ` AND price >= ?`;
                 params.push(Number.parseFloat(min_price));
             }
-            if (max_price !== null && max_price !== undefined) {
+            if (max_price !== null && max_price !== undefined && max_price != NaN) {
                 query += ` AND price <= ?`;
                 params.push(Number.parseFloat(max_price));
             }
-            if (duration !== null && duration !== undefined) {
+            if (duration !== null && duration !== undefined && duration != NaN) {
                 query += ` AND duration = ?`;
                 params.push(duration);
             }
-            if (rating !== null && rating !== undefined) {
+            if (rating !== null && rating !== undefined && rating != NaN) {
                 query += ` AND rating >= ?`;
                 params.push(rating);
             }

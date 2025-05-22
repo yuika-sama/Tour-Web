@@ -1,5 +1,6 @@
 const tourModel = require('../models/tours.model');
 
+
 const createTour = async (req, res) => {
     try {
         const { title, description, location, price, duration } = req.body;
@@ -111,6 +112,19 @@ const countToursReviewByRating = async (req, res) => {
     }
 };
 
+const countToursReview = async (req, res) => {
+    try {
+        const { tour_id } = req.params;
+        if (!tour_id) {
+            return res.status(400).json({ message: 'Tour ID is required' });
+        }
+        const count = await tourModel.countToursReview(tour_id);
+        res.status(200).json({message: 'Tours reviews count fetched successfully', count});
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const getAverageToursReview = async (req, res) => {
     try {
         const { tour_id } = req.params;
@@ -190,5 +204,6 @@ module.exports = {
     getToursByAverageRating,
     getToursReview,
     countToursReviewByRating,
-    getAverageToursReview
+    getAverageToursReview,
+    countToursReview
 };
