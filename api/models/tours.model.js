@@ -204,36 +204,52 @@ module.exports = {
         try {
             const { title, location, min_price, max_price, duration, rating } = filters;
             let query = `
-            SELECT 
-                t.*,
-                (SELECT m.url FROM tour_media m WHERE m.tour_id = t.tour_id ORDER BY m.media_id ASC LIMIT 1) AS first_image 
-            FROM tours t 
-            WHERE 1=1`;
+                SELECT 
+                    t.*,
+                    (SELECT m.url FROM tour_media m WHERE m.tour_id = t.tour_id ORDER BY m.media_id ASC LIMIT 1) AS first_image,
+                    AVG(r.rating) AS avg_rating
+                FROM tours t
+                LEFT JOIN reviews r ON t.tour_id = r.tour_id
+                WHERE 1=1`;
+
             const params = [];
 
-            if (title !== null && title !== undefined && title != NaN) {
-                query += ` AND title LIKE ?`;
+            // Filter by title
+            if (title !== null && title !== undefined && title !== '' && !isNaN(title) === false) {
+                query += ` AND t.title LIKE ?`;
                 params.push(`%${title}%`);
             }
-            if (location !== null && location !== undefined && location != NaN) {
-                query += ` AND location LIKE ?`;
+
+            // Filter by location
+            if (location !== null && location !== undefined && location !== '' && !isNaN(location) === false) {
+                query += ` AND t.location LIKE ?`;
                 params.push(`%${location}%`);
             }
-            if (min_price !== null && min_price !== undefined && min_price != NaN) {
-                query += ` AND price >= ?`;
+
+            // Filter by min price
+            if (min_price !== null && min_price !== undefined && !isNaN(min_price)) {
+                query += ` AND t.price >= ?`;
                 params.push(Number.parseFloat(min_price));
             }
-            if (max_price !== null && max_price !== undefined && max_price != NaN) {
-                query += ` AND price <= ?`;
+
+            // Filter by max price
+            if (max_price !== null && max_price !== undefined && !isNaN(max_price)) {
+                query += ` AND t.price <= ?`;
                 params.push(Number.parseFloat(max_price));
             }
-            if (duration !== null && duration !== undefined && duration != NaN) {
-                query += ` AND duration = ?`;
+
+            // Filter by duration
+            if (duration !== null && duration !== undefined && !isNaN(duration)) {
+                query += ` AND t.duration = ?`;
                 params.push(duration);
             }
-            if (rating !== null && rating !== undefined && rating != NaN) {
-                query += ` AND rating >= ?`;
-                params.push(rating);
+
+            query += ` GROUP BY t.tour_id`;
+
+            // Filter by avg rating using HAVING
+            if (rating !== null && rating !== undefined && !isNaN(rating)) {
+                query += ` HAVING avg_rating >= ?`;
+                params.push(Number.parseFloat(rating));
             }
 
             const [result] = await pool.query(query, params);
